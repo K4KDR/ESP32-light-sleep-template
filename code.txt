@@ -1,0 +1,66 @@
+
+
+//   Place parameters below at the top of your code (or "include" from a separate CONFIG file)
+
+// set SLEEP enable flag & duration
+#define SLEEP_YES                  // UNcomment to enable 'light sleep' mode
+#define uS_TO_S_FACTOR 1000000ULL  // Conversion factor for micro seconds to seconds
+#define TIME_TO_SLEEP  120         // duration ESP32 will go to sleep (in seconds) (120 seconds = 2 minutes)
+
+
+
+
+====================================================================================
+
+//   Place the 3 lines below (#ifdef -> #endif) at the VERY BOTTOM of your code's main loop:
+
+// +---------------------------------------------------------------------+//
+// + MAINLOOP -----------------------------------------------------------+//
+// +---------------------------------------------------------------------+//
+
+void loop() {
+
+//   EXISTING MAIN LOOP CODE GOES HERE
+  
+  #ifdef SLEEP_YES
+    sleep_now();       
+  #endif
+}
+
+
+====================================================================================
+
+
+//   Place the following two functions below your code's main loop:
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void sleep_now(){
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); // ESP32 wakes up every 120 seconds
+  
+  Serial.print("Going to light-sleep now for ");
+  Serial.print(TIME_TO_SLEEP);
+  Serial.println(" seconds...");
+  Serial.flush(); 
+  esp_light_sleep_start();
+
+  print_wakeup_reason(); //Print the wakeup reason for ESP32
+
+  delay(2000);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void print_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason)
+  {
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+}
